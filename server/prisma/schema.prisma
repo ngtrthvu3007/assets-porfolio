@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Asset {
+  id        String        @id @default(cuid())
+  symbol    String        @unique
+  name      String
+  type      String
+  quotes    MarketQuote[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+}
+
+model MarketDataSource {
+  id         String                @id @default(cuid())
+  code       String                @unique
+  name       String
+  quotes     MarketQuote[]
+  ingestions MarketDataIngestion[]
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  deletedAt  DateTime?
+}
+
+model MarketDataIngestion {
+  id            String                    @id @default(cuid())
+  sourceId      String
+  status        MarketDataIngestionStatus
+  sourcePayload Json?
+  errorMessage  String?
+  startedAt     DateTime
+  completedAt   DateTime?
+  quotes        MarketQuote[]
+  source        MarketDataSource          @relation(fields: [sourceId], references: [id])
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([sourceId, startedAt])
+  @@index([status, startedAt])
+  @@index([deletedAt])
+}
+
+model MarketQuote {
+  id              String              @id @default(cuid())
+  ingestionId     String
+  assetId         String
+  sourceId        String
+  buyPrice        Decimal?
+  sellPrice       Decimal?
+  sourceUpdatedAt DateTime
+  collectedAt     DateTime
+  ingestion       MarketDataIngestion @relation(fields: [ingestionId], references: [id])
+  asset           Asset               @relation(fields: [assetId], references: [id])
+  source          MarketDataSource    @relation(fields: [sourceId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+
+  @@unique([assetId, sourceId, sourceUpdatedAt])
+  @@index([assetId, sourceId, sourceUpdatedAt])
+  @@index([sourceId, collectedAt])
+  @@index([ingestionId])
+  @@index([deletedAt])
+}
+
+enum MarketDataIngestionStatus {
+  pending
+  running
+  success
+  failed
+}
