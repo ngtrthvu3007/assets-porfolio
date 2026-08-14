@@ -37,6 +37,7 @@ model MarketDataIngestion {
   errorMessage  String?
   startedAt     DateTime
   completedAt   DateTime?
+  sourceUpdatedAt DateTime?
   quotes        MarketQuote[]
   source        MarketDataSource          @relation(fields: [sourceId], references: [id])
   createdAt     DateTime                  @default(now())
@@ -44,6 +45,7 @@ model MarketDataIngestion {
   deletedAt     DateTime?
 
   @@index([sourceId, startedAt])
+  @@index([sourceId, sourceUpdatedAt])
   @@index([status, startedAt])
   @@index([deletedAt])
 }
@@ -75,5 +77,6 @@ enum MarketDataIngestionStatus {
   pending
   running
   success
+  no_change
   failed
 }

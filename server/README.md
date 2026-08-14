@@ -26,13 +26,16 @@ again before collecting data for that symbol.
 Market data ingestion writes one `MarketDataIngestion` record for each collect
 result:
 
-- `success` when raw source data is collected
+- `success` when raw source data is collected and new quote points are stored
+- `no_change` when raw source data is collected but the provider version already exists
 - `failed` when the collector cannot retrieve raw source data
 
-After a successful raw collect, the server normalizes quote data and creates
-`MarketQuote` records for seeded assets. Existing quotes with the same
-`assetId`, `sourceId`, and `sourceUpdatedAt` are rejected by the database unique
-constraint.
+After a successful raw collect, the server checks whether the same
+`sourceId` and provider `sourceUpdatedAt` was already ingested. New provider
+versions are stored in `MarketQuote`; unchanged provider data is recorded as a
+`no_change` ingestion.
+`MarketDataIngestion.sourceUpdatedAt` stores the provider update timestamp for
+the collect result, so monitoring can see which provider data version was read.
 
 ```mermaid
 flowchart TD
@@ -40,10 +43,14 @@ flowchart TD
   B --> C[collector.collect]
   C -->|failed| D[Create MarketDataIngestion failed]
   D --> E[Return null]
-  C -->|success| F[Create MarketDataIngestion success with raw sourcePayload]
-  F --> G[Resolve seeded assets by quote symbols]
-  G --> H[Create MarketQuote rows with createMany]
-  H --> I[Return collection result]
+  C -->|success| F[Read provider sourceUpdatedAt from result]
+  F --> G[Find existing ingestion by sourceUpdatedAt]
+  G -->|exists| I[Create MarketDataIngestion no_change]
+  I --> J[Return collection result]
+  G -->|none| K[Create MarketDataIngestion success]
+  K --> L[Resolve seeded assets by quote symbols]
+  L --> M[Create MarketQuote rows with createMany]
+  M --> J
 ```
 
 ## Scripts
