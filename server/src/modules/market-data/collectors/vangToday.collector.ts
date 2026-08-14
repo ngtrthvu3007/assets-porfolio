@@ -11,7 +11,7 @@ interface VangTodayPriceItem {
   buy: number;
   sell: number;
   type_code: string;
-  update_time: number;
+  update_time?: number;
 }
 
 interface VangTodayPricesResponse {
@@ -41,7 +41,7 @@ export class VangTodayCollector implements MarketDataCollector {
         buyPrice: item.buy,
         sellPrice: item.sell,
         source: this.source,
-        sourceUpdatedAt: new Date(item.update_time * 1000),
+        sourceUpdatedAt: new Date((item.update_time ?? response.current_time) * 1000),
       })),
       source: this.source,
       sourcePayload: response,

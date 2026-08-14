@@ -8,8 +8,9 @@ export interface CreateIngestionInput {
   errorMessage?: string;
   sourceCode: string;
   sourcePayload?: unknown;
+  sourceUpdatedAt?: Date;
   startedAt: Date;
-  status: "failed" | "success";
+  status: "failed" | "no_change" | "success";
 }
 
 interface CreateMarketQuotesInput {
@@ -19,11 +20,21 @@ interface CreateMarketQuotesInput {
   sourceId: string;
 }
 
+interface HasMarketDataIngestionInput {
+  sourceId: string;
+  sourceUpdatedAt: Date;
+}
+
+export const getMarketDataSourceByCodeRepo = async (code: string) => {
+  return prisma.marketDataSource.findUniqueOrThrow({ select: { id: true }, where: { code } });
+};
+
 export const createIngestionRepo = async (input: CreateIngestionInput): Promise<MarketDataIngestion> => {
   const data: Prisma.MarketDataIngestionCreateInput = {
     completedAt: input.completedAt,
     errorMessage: input.errorMessage,
     source: { connect: { code: input.sourceCode } },
+    sourceUpdatedAt: input.sourceUpdatedAt,
     startedAt: input.startedAt,
     status: input.status,
   };
@@ -33,6 +44,17 @@ export const createIngestionRepo = async (input: CreateIngestionInput): Promise<
   }
 
   return prisma.marketDataIngestion.create({ data });
+};
+
+export const hasMarketDataIngestionRepo = async (
+  input: HasMarketDataIngestionInput,
+): Promise<boolean> => {
+  const existingIngestion = await prisma.marketDataIngestion.findFirst({
+    select: { id: true },
+    where: { sourceId: input.sourceId, sourceUpdatedAt: input.sourceUpdatedAt },
+  });
+
+  return Boolean(existingIngestion);
 };
 
 export const createMarketQuotesRepo = async (input: CreateMarketQuotesInput) => {
