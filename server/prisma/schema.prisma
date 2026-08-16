@@ -57,6 +57,8 @@ model MarketQuote {
   sourceId        String
   buyPrice        Decimal?
   sellPrice       Decimal?
+  buyChange       Decimal?
+  sellChange      Decimal?
   sourceUpdatedAt DateTime
   collectedAt     DateTime
   ingestion       MarketDataIngestion @relation(fields: [ingestionId], references: [id])

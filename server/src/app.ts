@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import { envConfig } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { docsRouter } from "./routes/docs.route.js";
 import { healthRouter } from "./routes/health.route.js";
 import { marketDataRouter } from "./routes/marketData.route.js";
 import { pricesRouter } from "./routes/prices.route.js";
@@ -14,6 +15,7 @@ export const createApp = (): express.Express => {
   app.use(cors({ origin: envConfig.clientOrigin }));
   app.use(express.json());
 
+  app.use("/api", docsRouter);
   app.use("/api/market-data", marketDataRouter);
   app.use("/api", pricesRouter);
   app.use("/health", healthRouter);

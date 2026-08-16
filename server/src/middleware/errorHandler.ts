@@ -15,6 +15,12 @@ export class AppError extends Error {
   }
 }
 
+export const appError = (
+  statusCode: number,
+  code: string,
+  message: string,
+): AppError => new AppError(statusCode, code, message);
+
 interface ErrorResponse {
   error: {
     code: string;
@@ -25,7 +31,7 @@ interface ErrorResponse {
 
 class ErrorHandler {
   public readonly notFound: RequestHandler = (request, _response, next) => {
-    next(new AppError(404, NOT_FOUND, `Route not found: ${request.path}`));
+    next(appError(404, NOT_FOUND, `Route not found: ${request.path}`));
   };
 
   public readonly handle: ErrorRequestHandler = (

@@ -72,9 +72,11 @@ export const createMarketQuotesRepo = async (input: CreateMarketQuotesInput) => 
 
       return {
         assetId: assetIdsBySymbol[assetSymbol],
+        buyChange: quote.buyChange,
         buyPrice: quote.buyPrice,
         collectedAt: input.collectedAt,
         ingestionId: input.ingestionId,
+        sellChange: quote.sellChange,
         sellPrice: quote.sellPrice,
         sourceId: input.sourceId,
         sourceUpdatedAt: quote.sourceUpdatedAt,

@@ -9,6 +9,8 @@ const VANG_TODAY_SOURCE = "vang.today";
 
 interface VangTodayPriceItem {
   buy: number;
+  change_buy: number;
+  change_sell: number;
   sell: number;
   type_code: string;
   update_time?: number;
@@ -38,7 +40,9 @@ export class VangTodayCollector implements MarketDataCollector {
       collectedAt: new Date(response.current_time * 1000),
       quotes: response.data.map((item) => ({
         asset: { name: item.type_code, symbol: item.type_code, type: ASSET_TYPES.gold },
+        buyChange: item.change_buy,
         buyPrice: item.buy,
+        sellChange: item.change_sell,
         sellPrice: item.sell,
         source: this.source,
         sourceUpdatedAt: new Date((item.update_time ?? response.current_time) * 1000),
