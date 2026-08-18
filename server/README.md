@@ -21,6 +21,22 @@ Runtime ingestion does not create sources or assets automatically. If a collecto
 returns a new asset symbol, add it to `prisma/seed.ts` and run the seed script
 again before collecting data for that symbol.
 
+## Migration Workflow
+
+Do not create migration files by hand. Always let Prisma generate them.
+
+For schema changes, use this order:
+
+```sh
+npx prisma migrate dev --create-only --name <migration_name>
+npm run prisma:generate
+npm run typecheck
+npm run prisma:migrate
+```
+
+Review the generated SQL before running `npm run prisma:migrate`.
+Only apply the migration after Prisma Client generation and typecheck are OK.
+
 ## Market Data Flow
 
 Market data ingestion writes one `MarketDataIngestion` record for each collect
