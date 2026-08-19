@@ -1,11 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  DEFAULT_PRICE_DETAIL_RANGE,
   DEFAULT_SORT_ORDER,
   PaginationQueryDto,
+  PRICE_DETAIL_RANGE_VALUES,
   PRICE_LIST_SORT_VALUES,
   SORT_ORDER_VALUES,
 } from '@shared';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ListPricesQueryDto extends PaginationQueryDto {
   @ApiProperty({ example: 'gold' })
@@ -37,4 +39,14 @@ export class ListLatestPricesQueryDto {
   @IsNotEmpty()
   @IsString()
   public type!: string;
+}
+
+export class GetPriceDetailQueryDto {
+  @ApiPropertyOptional({
+    default: DEFAULT_PRICE_DETAIL_RANGE,
+    enum: PRICE_DETAIL_RANGE_VALUES,
+  })
+  @IsOptional()
+  @IsIn(PRICE_DETAIL_RANGE_VALUES)
+  public range?: (typeof PRICE_DETAIL_RANGE_VALUES)[number];
 }

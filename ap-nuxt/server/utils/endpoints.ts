@@ -4,5 +4,6 @@
 export const BACKEND_ROUTES = {
   prices: {
     latest: "/prices/latest",
+    types: "/prices/types",
   },
 } as const

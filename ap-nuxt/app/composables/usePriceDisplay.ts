@@ -1,17 +1,27 @@
 import { computed, type Ref } from "vue";
-import type { PriceItem, PriceTableRow } from "@/types/prices";
+import { ASSET_TYPE_LABELS } from "@/constants/prices";
+import type { ApiSuccessResponse } from "@/types/api";
+import type { LatestPricesResponse, PriceTableRow, PriceType, PriceTypesResponse } from "@/types/prices";
 import { formatCurrency, formatIsoTimestamp, formatSignedCurrency } from "@/utils/formatters";
 
 interface UsePriceDisplayState {
-  currentTime: Readonly<Ref<string | null>>;
-  prices: Readonly<Ref<PriceItem[]>>;
+  data: Readonly<Ref<ApiSuccessResponse<LatestPricesResponse> | undefined>>;
+  isFetching: Readonly<Ref<boolean>>;
+  priceTypesData: Readonly<Ref<ApiSuccessResponse<PriceTypesResponse> | undefined>>;
 }
 
-export const usePriceDisplay = ({ currentTime, prices }: UsePriceDisplayState) => {
-  const lastUpdatedAt = computed(() => formatIsoTimestamp(currentTime.value));
+export const usePriceDisplay = ({ data, isFetching, priceTypesData }: UsePriceDisplayState) => {
+  const lastUpdatedAt = computed(() => formatIsoTimestamp(data.value?.data.currentTime ?? null));
+
+  const priceTypes = computed<PriceType[]>(() =>
+    (priceTypesData.value?.data.items ?? []).map((priceType) => ({
+      ...priceType,
+      label: ASSET_TYPE_LABELS[priceType.type] ?? priceType.label,
+    })),
+  );
 
   const priceRows = computed<PriceTableRow[]>(() =>
-    prices.value.map((price) => ({
+    (data.value?.data.items ?? []).map((price) => ({
       symbol: price.symbol,
       name: price.name,
       buy: formatCurrency(price.buyPrice ?? 0),
@@ -24,5 +34,7 @@ export const usePriceDisplay = ({ currentTime, prices }: UsePriceDisplayState) =
     })),
   );
 
-  return { lastUpdatedAt, priceRows };
+  const isInitialFetching = computed(() => isFetching.value && !priceRows.value.length);
+
+  return { lastUpdatedAt, priceRows, priceTypes, isInitialFetching };
 };
