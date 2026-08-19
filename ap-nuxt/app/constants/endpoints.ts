@@ -2,5 +2,6 @@
 export const API_ROUTES = {
   prices: {
     latest: "/prices/latest",
+    types: "/prices/types",
   },
 } as const

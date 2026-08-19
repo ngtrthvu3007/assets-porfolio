@@ -5,8 +5,10 @@ import {
   ListPricesQueryDto,
 } from './dto/list-prices-query.dto';
 import {
+  GetPriceDetailResponseDto,
   ListLatestPricesResponseDto,
   ListPricesResponseDto,
+  ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
 import { PricesService } from './prices.service';
 
@@ -28,11 +30,13 @@ export class PricesController {
   }
 
   @Get('types')
+  @ApiOkResponse({ type: ListPriceTypesResponseDto })
   public getPriceTypesController() {
     return this.pricesService.listPriceTypesService();
   }
 
   @Get(':type/:symbol')
+  @ApiOkResponse({ type: GetPriceDetailResponseDto })
   public getPriceDetailController(
     @Param('type') type: string,
     @Param('symbol') symbol: string,

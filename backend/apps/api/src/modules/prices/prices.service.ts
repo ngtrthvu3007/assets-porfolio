@@ -16,6 +16,7 @@ import {
 import {
   ListLatestPricesResponseDto,
   ListPricesResponseDto,
+  ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
 import { PricesRepository } from './prices.repository';
 
@@ -74,17 +75,13 @@ export class PricesService {
     };
   }
 
-  public async listPriceTypesService() {
+  public async listPriceTypesService(): Promise<ListPriceTypesResponseDto> {
     const types = await this.pricesRepository.listPriceTypesRepo();
 
+    // TODO: Asset's type need to manage in a table
+    // to make backend needn't map or modify result
     const items = types.map((type) => {
-      const label = type
-        .split(/[-_\s]+/)
-        .filter(Boolean)
-        .map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`)
-        .join(' ');
-
-      return { label, type };
+      return { label: type.toUpperCase(), type };
     });
 
     return { items };

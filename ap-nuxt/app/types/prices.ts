@@ -20,6 +20,15 @@ export interface LatestPricesResponse {
   type: string
 }
 
+export interface PriceType {
+  label: string
+  type: string
+}
+
+export interface PriceTypesResponse {
+  items: PriceType[]
+}
+
 export interface PriceTableRow {
   symbol: string
   buy: string

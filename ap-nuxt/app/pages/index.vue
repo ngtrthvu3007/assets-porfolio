@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { Bitcoin, ChartArea, LoaderCircleIcon, RefreshCwIcon } from "@lucide/vue";
-import { computed, ref } from "vue";
+import { ChartArea, LoaderCircleIcon, RefreshCwIcon } from "@lucide/vue";
+import { ref } from "vue";
 import { usePriceDisplay } from "@/composables/usePriceDisplay";
-import { prefetchPrices, usePrices } from "@/composables/usePrices";
-import type { PriceItem } from "@/types/prices";
+import { prefetchPriceTypes, prefetchPrices, usePrices, usePriceTypes } from "@/composables/usePrices";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-await prefetchPrices();
+await Promise.all([prefetchPrices(), prefetchPriceTypes()]);
 
 const { data, isFetching, refetch } = usePrices();
+const { data: priceTypesData } = usePriceTypes();
 
-const currentTime = computed(() => data.value?.data.currentTime ?? null);
-const prices = computed<PriceItem[]>(() => data.value?.data.items ?? []);
-
-const { lastUpdatedAt, priceRows } = usePriceDisplay({ currentTime, prices });
-const isInitialFetching = computed(() => isFetching.value && !priceRows.value.length);
+const { lastUpdatedAt, priceRows, priceTypes, isInitialFetching } = usePriceDisplay({
+  data,
+  isFetching,
+  priceTypesData,
+});
 
 const assetClass = ref("gold");
 
@@ -46,17 +46,9 @@ useSeoMeta({
           class="col-span-4 flex flex-wrap items-center gap-2 md:col-span-4 md:justify-end xl:col-span-6">
           <Tabs v-model="assetClass">
             <TabsList>
-              <TabsTrigger value="gold">
+              <TabsTrigger v-for="priceType in priceTypes" :key="priceType.type" :value="priceType.type">
                 <ChartArea class="h-5 w-5" />
-                Vàng
-              </TabsTrigger>
-              <TabsTrigger value="stock">
-                <ChartArea class="h-5 w-5" />
-                Cổ phiếu
-              </TabsTrigger>
-              <TabsTrigger value="crypto">
-                <Bitcoin class="h-5 w-5" />
-                Tiền số
+                {{ formatCapitalLetter(priceType.label) }}
               </TabsTrigger>
             </TabsList>
           </Tabs>
