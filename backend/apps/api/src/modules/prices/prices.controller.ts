@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
+  GetPriceDetailQueryDto,
   ListLatestPricesQueryDto,
   ListPricesQueryDto,
 } from './dto/list-prices-query.dto';
@@ -40,8 +41,12 @@ export class PricesController {
   public getPriceDetailController(
     @Param('type') type: string,
     @Param('symbol') symbol: string,
-    @Query('days') days?: string,
+    @Query() query: GetPriceDetailQueryDto,
   ) {
-    return this.pricesService.getPriceDetailService({ days, symbol, type });
+    return this.pricesService.getPriceDetailService({
+      range: query.range,
+      symbol,
+      type,
+    });
   }
 }

@@ -4,6 +4,7 @@ export * from './constants/pagination';
 export * from './dto/pagination.dto';
 export * from './types/assets';
 export * from './types/market-data';
+export * from './utils/decimal.util';
 export * from './utils/env.util';
 export * from './utils/errors.util';
 export * from './utils/json.util';

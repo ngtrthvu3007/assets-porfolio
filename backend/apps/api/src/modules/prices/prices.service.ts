@@ -3,12 +3,15 @@ import {
   buildPaginationMeta,
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
+  DEFAULT_PRICE_DETAIL_RANGE,
   DEFAULT_PRICE_SORT,
   DEFAULT_SORT_ORDER,
   PRICE_LIST_SORT_VALUES,
   SORT_ORDER_VALUES,
+  toNullableNumber,
 } from '@shared';
 import type { Prisma } from '@prisma/client';
+import { ChartsService } from '../charts/charts.service';
 import {
   ListLatestPricesQueryDto,
   ListPricesQueryDto,
@@ -19,20 +22,14 @@ import {
   ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
 import { PricesRepository } from './prices.repository';
-
-type PriceQuoteWithAsset = Prisma.MarketQuoteGetPayload<{
-  include: { asset: true };
-}>;
-
-interface GetPriceDetailInput {
-  days?: string;
-  symbol: string;
-  type: string;
-}
+import type { GetPriceDetailParams, PriceQuoteWithAsset } from './prices.types';
 
 @Injectable()
 export class PricesService {
-  public constructor(private readonly pricesRepository: PricesRepository) {}
+  public constructor(
+    private readonly chartsService: ChartsService,
+    private readonly pricesRepository: PricesRepository,
+  ) {}
 
   public async listPricesService(
     query: ListPricesQueryDto,
@@ -87,14 +84,17 @@ export class PricesService {
     return { items };
   }
 
-  public async getPriceDetailService(input: GetPriceDetailInput) {
-    const days = input.days ? Number(input.days) : null;
-    const quotes = await this.pricesRepository.listQuotesByAssetRepo({
-      days,
+  public async getPriceDetailService(input: GetPriceDetailParams) {
+    const range = input.range ?? DEFAULT_PRICE_DETAIL_RANGE;
+    const resolvedDateRange = this.chartsService.resolveDateRangeService(range);
+
+    const quotes = await this.pricesRepository.listQuotesInRangeRepo({
+      end: resolvedDateRange.end,
+      start: resolvedDateRange.start,
       symbol: input.symbol,
       type: input.type,
     });
-    const latestQuote = quotes[0];
+    const latestQuote = quotes[quotes.length - 1];
 
     if (!latestQuote) {
       throw new NotFoundException(
@@ -102,21 +102,12 @@ export class PricesService {
       );
     }
 
-    const history = days
-      ? quotes
-          .filter(
-            (quote) =>
-              quote.sourceUpdatedAt >=
-              new Date(Date.now() - days * 24 * 60 * 60 * 1000),
-          )
-          .map((quote) => ({
-            buyPrice: quote.buyPrice ? quote.buyPrice.toNumber() : null,
-            collectedAt: quote.collectedAt.toISOString(),
-            sellPrice: quote.sellPrice ? quote.sellPrice.toNumber() : null,
-            sourceUpdatedAt: quote.sourceUpdatedAt.toISOString(),
-          }))
-          .reverse()
-      : [];
+    // TODO: dedupes in JS on the full result set rather than at the DB
+    // layer — deliberate tradeoff for portability across the planned
+    // Postgres migration. See ChartsService.dedupeByDayService for why.
+    const dedupedQuotes = this.chartsService.dedupeByDayService(quotes, range);
+
+    const history = dedupedQuotes.map((quote) => this.toQuoteBaseFields(quote));
 
     return {
       asset: {
@@ -126,18 +117,9 @@ export class PricesService {
       },
       history,
       latest: {
-        buyChange: latestQuote.buyChange
-          ? latestQuote.buyChange.toNumber()
-          : null,
-        buyPrice: latestQuote.buyPrice ? latestQuote.buyPrice.toNumber() : null,
-        collectedAt: latestQuote.collectedAt.toISOString(),
-        sellChange: latestQuote.sellChange
-          ? latestQuote.sellChange.toNumber()
-          : null,
-        sellPrice: latestQuote.sellPrice
-          ? latestQuote.sellPrice.toNumber()
-          : null,
-        sourceUpdatedAt: latestQuote.sourceUpdatedAt.toISOString(),
+        ...this.toQuoteBaseFields(latestQuote),
+        buyChange: toNullableNumber(latestQuote.buyChange),
+        sellChange: toNullableNumber(latestQuote.sellChange),
       },
       source: { code: latestQuote.source.code, name: latestQuote.source.name },
     };
@@ -145,15 +127,26 @@ export class PricesService {
 
   private toPriceListItem(quote: PriceQuoteWithAsset) {
     return {
-      buyChange: quote.buyChange?.toNumber() ?? null,
-      buyPrice: quote.buyPrice?.toNumber() ?? null,
-      collectedAt: quote.collectedAt.toISOString(),
+      ...this.toQuoteBaseFields(quote),
+      buyChange: toNullableNumber(quote.buyChange),
       name: quote.asset.name,
-      sellChange: quote.sellChange?.toNumber() ?? null,
-      sellPrice: quote.sellPrice?.toNumber() ?? null,
-      sourceUpdatedAt: quote.sourceUpdatedAt.toISOString(),
+      sellChange: toNullableNumber(quote.sellChange),
       symbol: quote.asset.symbol,
       type: quote.asset.type,
+    };
+  }
+
+  private toQuoteBaseFields(quote: {
+    buyPrice: Prisma.Decimal | null;
+    collectedAt: Date;
+    sellPrice: Prisma.Decimal | null;
+    sourceUpdatedAt: Date;
+  }) {
+    return {
+      buyPrice: toNullableNumber(quote.buyPrice),
+      collectedAt: quote.collectedAt.toISOString(),
+      sellPrice: toNullableNumber(quote.sellPrice),
+      sourceUpdatedAt: quote.sourceUpdatedAt.toISOString(),
     };
   }
 }

@@ -4,7 +4,7 @@ import { DEFAULT_SORT_ORDER } from '@shared';
 import type { Prisma } from '@prisma/client';
 import type {
   ListLatestQuotesParams,
-  ListQuotesByAssetParams,
+  ListQuotesInRangeParams,
   ListQuotesParams,
 } from './prices.types';
 
@@ -70,11 +70,12 @@ export class PricesRepository {
     });
   }
 
-  public async listQuotesByAssetRepo(input: ListQuotesByAssetParams) {
+  // Filters by sourceUpdatedAt directly in the query so the DB never
+  // returns more rows than the requested [start, end] window covers.
+  public async listQuotesInRangeRepo(input: ListQuotesInRangeParams) {
     return this.prismaService.marketQuote.findMany({
       include: { asset: true, source: true },
-      orderBy: [{ sourceUpdatedAt: 'desc' }, { collectedAt: 'desc' }],
-      take: input.days ? undefined : 2,
+      orderBy: [{ sourceUpdatedAt: 'asc' }, { collectedAt: 'asc' }],
       where: {
         asset: {
           deletedAt: null,
@@ -83,6 +84,7 @@ export class PricesRepository {
         },
         deletedAt: null,
         source: { deletedAt: null },
+        sourceUpdatedAt: { gte: input.start, lte: input.end },
       },
     });
   }
