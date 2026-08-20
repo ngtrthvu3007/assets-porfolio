@@ -76,29 +76,29 @@ const { currencies, selectedCurrency, setCurrency } = useCurrency();
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem>
-              <Sparkles class="text-foreground" />
+              <Sparkles />
               Upgrade to Pro
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem>
-              <BadgeCheck class="text-foreground" />
+              <BadgeCheck />
               Account
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <CreditCard class="text-foreground" />
+              <CreditCard />
               Billing
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Bell class="text-foreground" />
+              <Bell />
               Notifications
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
-              <Palette class="text-foreground" />
+              <Palette />
               Theme
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
@@ -116,7 +116,7 @@ const { currencies, selectedCurrency, setCurrency } = useCurrency();
           <DropdownMenuSeparator />
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
-              <CircleDollarSign class="text-foreground" />
+              <CircleDollarSign />
               Currency
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
@@ -124,7 +124,10 @@ const { currencies, selectedCurrency, setCurrency } = useCurrency();
                 <DropdownMenuRadioGroup
                   :model-value="selectedCurrency"
                   @update:model-value="setCurrency($event as Currency)">
-                  <DropdownMenuRadioItem v-for="currency in currencies" :key="currency" :value="currency">
+                  <DropdownMenuRadioItem
+                    v-for="currency in currencies"
+                    :key="currency"
+                    :value="currency">
                     {{ currency }}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
@@ -133,7 +136,7 @@ const { currencies, selectedCurrency, setCurrency } = useCurrency();
           </DropdownMenuSub>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <LogOut class="text-foreground" />
+            <LogOut />
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
