@@ -9,6 +9,8 @@ import {
   StarIcon,
   TrendingUpIcon,
 } from "@lucide/vue";
+import type { Component } from "vue";
+import { markRaw } from "vue";
 import NavUser from "@/components/NavUser.vue";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +34,7 @@ const props = withDefaults(defineProps<SidebarProps>(), { collapsible: "icon" })
 const data = { user: { name: "shadcn", email: "m@example.com", avatar: "/avatars/shadcn.jpg" } };
 
 const route = useRoute();
-const NuxtLink = resolveComponent("NuxtLink");
+const NuxtLink = markRaw(resolveComponent("NuxtLink") as Component);
 
 const navigationItems = [
   { icon: HomeIcon, label: "Dashboard", url: null, status: "Soon" },
@@ -45,7 +47,7 @@ const navigationItems = [
 </script>
 
 <template>
-  <Sidebar v-bind="props" class="">
+  <Sidebar v-bind="props">
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
@@ -74,8 +76,7 @@ const navigationItems = [
                 :as="item.url ? NuxtLink : 'button'"
                 :to="item.url ?? undefined"
                 :is-active="item.url === route.path"
-                :tooltip="item.label"
-              >
+                :tooltip="item.label">
                 <component :is="item.icon" />
                 <span>{{ item.label }}</span>
                 <Badge v-if="item.status !== 'Active'" variant="default" class="ml-auto"> Soon </Badge>

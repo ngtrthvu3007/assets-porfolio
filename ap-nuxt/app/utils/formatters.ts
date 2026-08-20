@@ -20,5 +20,11 @@ export const formatIsoTimestamp = (isoDate: string | null): string => {
   return dayjs(isoDate).tz(DEFAULT_TIMEZONE).format(DEFAULT_ISO_FORMAT);
 };
 
+export const formatIsoDate = (isoDate: string | null): string => {
+  if (!isoDate) return "--";
+
+  return dayjs(isoDate).tz(DEFAULT_TIMEZONE).format("DD/MM/YYYY");
+};
+
 export const formatCapitalLetter = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();

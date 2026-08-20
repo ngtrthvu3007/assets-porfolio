@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+useBreadcrumbs().setBreadcrumbs([{ label: "Markets" }]);
+
 await Promise.all([prefetchPrices(), prefetchPriceTypes()]);
 
 const { data, isFetching, refetch } = usePrices();
@@ -21,8 +23,6 @@ const { lastUpdatedAt, priceRows, priceTypes, isInitialFetching } = usePriceDisp
 });
 
 const assetClass = ref("gold");
-
-useBreadcrumbs().setBreadcrumbs([{ label: "Markets" }]);
 
 useSeoMeta({
   title: "Bảng giá thị trường - Asset Portfolio",
@@ -75,27 +75,31 @@ useSeoMeta({
         <TableHeader>
           <TableRow>
             <TableHead>Mã loại</TableHead>
-            <TableHead class="text-right">Mua vào</TableHead>
-            <TableHead class="text-right">Bán ra</TableHead>
-            <TableHead class="text-right">Chênh lệch mua</TableHead>
-            <TableHead class="text-right">Chênh lệch bán</TableHead>
+            <TableHead>Mua vào</TableHead>
+            <TableHead>Bán ra</TableHead>
+            <TableHead>Chênh lệch mua</TableHead>
+            <TableHead>Chênh lệch bán</TableHead>
             <TableHead>Cập nhật</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="price in priceRows" :key="price.symbol">
+          <TableRow
+            v-for="price in priceRows"
+            :key="price.symbol"
+            class="cursor-pointer"
+            @click="navigateTo(`/markets/${assetClass}/${price.symbol}`)">
             <TableCell>
               <div class="flex flex-col gap-1">
                 <Badge variant="outline" class="w-fit font-semibold">{{ price.symbol }}</Badge>
                 <span class="text-xs text -foreground">{{ price.name }}</span>
               </div>
             </TableCell>
-            <TableCell class="text-right font-medium">{{ price.buy }}</TableCell>
-            <TableCell class="text-right font-medium">{{ price.sell }}</TableCell>
-            <TableCell class="text-right font-semibold" :class="price.buyChangeClass">
+            <TableCell class="font-medium">{{ price.buy }}</TableCell>
+            <TableCell class="font-medium">{{ price.sell }}</TableCell>
+            <TableCell class="font-semibold" :class="price.buyChangeClass">
               {{ price.buyChange }}
             </TableCell>
-            <TableCell class="text-right font-semibold" :class="price.sellChangeClass">
+            <TableCell class="font-semibold" :class="price.sellChangeClass">
               {{ price.sellChange }}
             </TableCell>
             <TableCell class="text-sm text-muted-foreground">{{ price.updatedAt }}</TableCell>

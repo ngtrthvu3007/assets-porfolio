@@ -3,7 +3,9 @@
 // auto-imports everything here — no explicit import needed in server/routes/.
 export const BACKEND_ROUTES = {
   prices: {
+    detail: (type: string, symbol: string) => `/prices/${type}/${symbol}`,
     latest: "/prices/latest",
+    list: "/prices",
     types: "/prices/types",
   },
 } as const

@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import type { Component } from "vue";
+import { markRaw } from "vue";
 
 const { breadcrumbs } = useBreadcrumbs();
-const NuxtLink = resolveComponent("NuxtLink");
+const NuxtLink = markRaw(resolveComponent("NuxtLink") as Component);
 </script>
 
 <template>
@@ -24,7 +26,7 @@ const NuxtLink = resolveComponent("NuxtLink");
         <div class="flex items-center gap-2 px-4">
           <SidebarTrigger class="-ml-1" />
           <Separator orientation="vertical" class="mr-2 data-[orientation=vertical]:h-4" />
-          <Breadcrumb v-if="breadcrumbs.length">
+          <Breadcrumb>
             <BreadcrumbList>
               <template v-for="(crumb, index) in breadcrumbs" :key="crumb.label">
                 <BreadcrumbItem>

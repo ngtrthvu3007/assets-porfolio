@@ -7,7 +7,14 @@ import {
   PRICE_LIST_SORT_VALUES,
   SORT_ORDER_VALUES,
 } from '@shared';
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 
 export class ListPricesQueryDto extends PaginationQueryDto {
   @ApiProperty({ example: 'gold' })
@@ -49,4 +56,17 @@ export class GetPriceDetailQueryDto {
   @IsOptional()
   @IsIn(PRICE_DETAIL_RANGE_VALUES)
   public range?: (typeof PRICE_DETAIL_RANGE_VALUES)[number];
+
+  // Required only when range="custom" — ignored for every other range.
+  @ApiPropertyOptional({ example: '2026-08-01' })
+  @ValidateIf((dto: GetPriceDetailQueryDto) => dto.range === 'custom')
+  @IsNotEmpty()
+  @IsDateString()
+  public startDate?: string;
+
+  @ApiPropertyOptional({ example: '2026-08-15' })
+  @ValidateIf((dto: GetPriceDetailQueryDto) => dto.range === 'custom')
+  @IsNotEmpty()
+  @IsDateString()
+  public endDate?: string;
 }
