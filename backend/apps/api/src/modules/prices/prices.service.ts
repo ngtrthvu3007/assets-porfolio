@@ -11,12 +11,8 @@ import {
 } from '@shared';
 import type { Prisma } from '@prisma/client';
 import { ChartsService } from '../charts/charts.service';
+import { ListPricesQueryDto } from './dto/list-prices-query.dto';
 import {
-  ListLatestPricesQueryDto,
-  ListPricesQueryDto,
-} from './dto/list-prices-query.dto';
-import {
-  ListLatestPricesResponseDto,
   ListPricesResponseDto,
   ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
@@ -60,14 +56,25 @@ export class PricesService {
   }
 
   public async listLatestPricesService(
-    query: ListLatestPricesQueryDto,
-  ): Promise<ListLatestPricesResponseDto> {
+    query: ListPricesQueryDto,
+  ): Promise<ListPricesResponseDto> {
+    const page = Number(query.page ?? DEFAULT_PAGE);
+    const pageSize = Number(query.pageSize ?? DEFAULT_PAGE_SIZE);
     const type = query.type.trim().toLowerCase();
-    const quotes = await this.pricesRepository.listLatestQuotesRepo({ type });
+    const q = query.q?.trim() || undefined;
+
+    const { items: quotes, total } =
+      await this.pricesRepository.listLatestQuotesRepo({
+        page,
+        pageSize,
+        q,
+        type,
+      });
 
     return {
       currentTime: new Date(),
       items: quotes.map((quote) => this.toPriceListItem(quote)),
+      pagination: buildPaginationMeta(page, pageSize, total),
       type,
     };
   }

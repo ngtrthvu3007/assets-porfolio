@@ -2,12 +2,10 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
   GetPriceDetailQueryDto,
-  ListLatestPricesQueryDto,
   ListPricesQueryDto,
 } from './dto/list-prices-query.dto';
 import {
   GetPriceDetailResponseDto,
-  ListLatestPricesResponseDto,
   ListPricesResponseDto,
   ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
@@ -25,8 +23,8 @@ export class PricesController {
   }
 
   @Get('latest')
-  @ApiOkResponse({ type: ListLatestPricesResponseDto })
-  public getLatestPricesController(@Query() query: ListLatestPricesQueryDto) {
+  @ApiOkResponse({ type: ListPricesResponseDto })
+  public getLatestPricesController(@Query() query: ListPricesQueryDto) {
     return this.pricesService.listLatestPricesService(query);
   }
 

@@ -18,7 +18,7 @@ import type {
 import { apiFetch } from "@/utils/apiFetch";
 
 const pricesQueryOptions = (query: LatestPricesQuery) => ({
-  queryKey: PRICES_QUERY_KEYS.latest(query.type),
+  queryKey: PRICES_QUERY_KEYS.latest(query.type, query.q, query.page, query.pageSize),
   queryFn: () => apiFetch<ApiSuccessResponse<LatestPricesResponse>>(API_ROUTES.prices.latest, { query }),
   staleTime: DEFAULT_STALE_TIME_MS,
 });
@@ -39,8 +39,23 @@ const priceDetailQueryOptions = (params: PriceDetailParams, query: PriceDetailQu
   staleTime: DEFAULT_STALE_TIME_MS,
 });
 
-export const usePrices = (query: LatestPricesQuery = DEFAULT_LATEST_PRICES_QUERY) => {
-  return useQuery({ ...pricesQueryOptions(query), placeholderData: keepPreviousData });
+export const usePrices = (
+  query: MaybeRefOrGetter<LatestPricesQuery> = DEFAULT_LATEST_PRICES_QUERY,
+) => {
+  const queryKey = computed(() => {
+    const { type, q, page, pageSize } = toValue(query);
+    return PRICES_QUERY_KEYS.latest(type, q, page, pageSize);
+  });
+
+  return useQuery({
+    queryKey,
+    queryFn: () =>
+      apiFetch<ApiSuccessResponse<LatestPricesResponse>>(API_ROUTES.prices.latest, {
+        query: toValue(query),
+      }),
+    staleTime: DEFAULT_STALE_TIME_MS,
+    placeholderData: keepPreviousData,
+  });
 };
 
 export const usePriceTypes = () => useQuery(priceTypesQueryOptions());

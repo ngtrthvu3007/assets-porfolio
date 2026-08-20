@@ -44,17 +44,6 @@ export class ListPricesResponseDto {
   public type!: string;
 }
 
-export class ListLatestPricesResponseDto {
-  @ApiProperty({ example: '2026-08-17T02:00:00.000Z' })
-  public currentTime!: Date;
-
-  @ApiProperty({ type: [PriceListItemDto] })
-  public items!: PriceListItemDto[];
-
-  @ApiProperty({ example: 'gold' })
-  public type!: string;
-}
-
 export class PriceTypeItemDto {
   @ApiProperty({ example: 'Gold' })
   public label!: string;

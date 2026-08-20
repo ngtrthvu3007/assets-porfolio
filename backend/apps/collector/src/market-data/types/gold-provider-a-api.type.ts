@@ -1,4 +1,4 @@
-export interface MarketDataApiItem {
+export interface GoldProviderAApiItem {
   buy: number;
   change_buy: number;
   change_sell: number;
@@ -7,8 +7,8 @@ export interface MarketDataApiItem {
   update_time?: number;
 }
 
-export interface MarketDataApiResponse {
+export interface GoldProviderAApiResponse {
   current_time: number;
-  data: MarketDataApiItem[];
+  data: GoldProviderAApiItem[];
   success: boolean;
 }

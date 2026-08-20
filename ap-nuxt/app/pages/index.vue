@@ -1,28 +1,44 @@
 <script setup lang="ts">
-import { ChartArea, LoaderCircleIcon, RefreshCwIcon } from "@lucide/vue";
-import { ref } from "vue";
+import { ChartArea, LoaderCircleIcon, RefreshCwIcon, SearchIcon } from "@lucide/vue";
+import { refDebounced } from "@vueuse/core";
+import { ref, watch } from "vue";
 import { usePriceDisplay } from "@/composables/usePriceDisplay";
 import { prefetchPriceTypes, prefetchPrices, usePrices, usePriceTypes } from "@/composables/usePrices";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/constants/default";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import TablePagination from "@/components/TablePagination.vue";
 
 useBreadcrumbs().setBreadcrumbs([{ label: "Markets" }]);
 
+const assetClass = ref("gold");
+const search = ref("");
+const searchDebounced = refDebounced(search, 300);
+const page = ref(DEFAULT_PAGE);
+
+watch([assetClass, searchDebounced], () => {
+  page.value = DEFAULT_PAGE;
+});
+
 await Promise.all([prefetchPrices(), prefetchPriceTypes()]);
 
-const { data, isFetching, refetch } = usePrices();
+const { data, isFetching, refetch } = usePrices(() => ({
+  type: assetClass.value,
+  q: searchDebounced.value || undefined,
+  page: page.value,
+  pageSize: DEFAULT_PAGE_SIZE,
+}));
 const { data: priceTypesData } = usePriceTypes();
 
-const { lastUpdatedAt, priceRows, priceTypes, isInitialFetching } = usePriceDisplay({
+const { lastUpdatedAt, pagination, priceRows, priceTypes, isInitialFetching } = usePriceDisplay({
   data,
   isFetching,
   priceTypesData,
 });
-
-const assetClass = ref("gold");
 
 useSeoMeta({
   title: "Bảng giá thị trường - Asset Portfolio",
@@ -52,6 +68,11 @@ useSeoMeta({
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <div class="relative">
+            <SearchIcon class="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input v-model="search" placeholder="Tìm theo mã hoặc tên..." class="w-56 pl-8" />
+          </div>
 
           <Button size="sm" :disabled="isFetching" @click="refetch()">
             <LoaderCircleIcon v-if="isFetching" class="h-4 w-4 animate-spin" />
@@ -106,6 +127,8 @@ useSeoMeta({
           </TableRow>
         </TableBody>
       </Table>
+
+      <TablePagination v-model:page="page" :pagination="pagination" />
     </section>
   </section>
 </template>

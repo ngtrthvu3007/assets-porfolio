@@ -40,14 +40,6 @@ export class ListPricesQueryDto extends PaginationQueryDto {
   @IsString()
   public order?: string;
 }
-
-export class ListLatestPricesQueryDto {
-  @ApiProperty({ example: 'gold' })
-  @IsNotEmpty()
-  @IsString()
-  public type!: string;
-}
-
 export class GetPriceDetailQueryDto {
   @ApiPropertyOptional({
     default: DEFAULT_PRICE_DETAIL_RANGE,

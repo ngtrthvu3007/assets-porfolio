@@ -19,6 +19,9 @@ export interface ListQuotesParams {
 }
 
 export interface ListLatestQuotesParams {
+  page: number;
+  pageSize: number;
+  q?: string;
   type: string;
 }
 
