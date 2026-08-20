@@ -6,8 +6,7 @@ import {
   DEFAULT_PRICE_DETAIL_RANGE,
   DEFAULT_PRICE_SORT,
   DEFAULT_SORT_ORDER,
-  PRICE_LIST_SORT_VALUES,
-  SORT_ORDER_VALUES,
+  PRICE_DETAIL_RANGE,
   toNullableNumber,
 } from '@shared';
 import type { Prisma } from '@prisma/client';
@@ -21,6 +20,7 @@ import {
   ListPricesResponseDto,
   ListPriceTypesResponseDto,
 } from './dto/list-prices-response.dto';
+import { EMPTY_LATEST_QUOTE } from './prices.constants';
 import { PricesRepository } from './prices.repository';
 import type { GetPriceDetailParams, PriceQuoteWithAsset } from './prices.types';
 
@@ -85,6 +85,54 @@ export class PricesService {
   }
 
   public async getPriceDetailService(input: GetPriceDetailParams) {
+    const asset = await this.pricesRepository.findAssetRepo({
+      symbol: input.symbol,
+      type: input.type,
+    });
+
+    if (!asset) {
+      throw new NotFoundException(
+        `Asset not found for ${input.type}/${input.symbol}`,
+      );
+    }
+
+    const { latest, source } = await this.getCurrentPriceFields(input);
+    const { history, range } = await this.getHistoryForRange(input);
+
+    return {
+      asset: { name: asset.name, symbol: asset.symbol, type: asset.type },
+      history,
+      latest,
+      range,
+      source,
+      stats: this.toStats(history, latest),
+    };
+  }
+
+  private async getCurrentPriceFields(input: GetPriceDetailParams) {
+    const latestOverallQuote = await this.pricesRepository.findLatestQuoteRepo({
+      symbol: input.symbol,
+      type: input.type,
+    });
+
+    if (!latestOverallQuote) {
+      return { latest: EMPTY_LATEST_QUOTE, source: { code: null, name: null } };
+    }
+
+    return {
+      latest: {
+        ...this.toQuoteBaseFields(latestOverallQuote),
+        buyChange: toNullableNumber(latestOverallQuote.buyChange),
+        sellChange: toNullableNumber(latestOverallQuote.sellChange),
+      },
+      source: {
+        code: latestOverallQuote.source.code,
+        name: latestOverallQuote.source.name,
+      },
+    };
+  }
+
+  private async getHistoryForRange(input: GetPriceDetailParams) {
     const range = input.range ?? DEFAULT_PRICE_DETAIL_RANGE;
     const resolvedDateRange = this.chartsService.resolveDateRangeService(range);
 
@@ -94,34 +142,31 @@ export class PricesService {
       symbol: input.symbol,
       type: input.type,
     });
-    const latestQuote = quotes[quotes.length - 1];
 
-    if (!latestQuote) {
-      throw new NotFoundException(
-        `Price not found for ${input.type}/${input.symbol}`,
-      );
-    }
+    if (!quotes.length) return { history: [], range };
+
+    // range=today: prepend yesterday's last close so %change isn't always 0.
+    const anchorQuote =
+      range === PRICE_DETAIL_RANGE.TODAY
+        ? await this.pricesRepository.findLastQuoteBeforeRepo({
+            before: resolvedDateRange.start,
+            symbol: input.symbol,
+            type: input.type,
+          })
+        : null;
+    const quotesWithAnchor = anchorQuote ? [anchorQuote, ...quotes] : quotes;
 
     // TODO: dedupes in JS on the full result set rather than at the DB
     // layer — deliberate tradeoff for portability across the planned
     // Postgres migration. See ChartsService.dedupeByDayService for why.
-    const dedupedQuotes = this.chartsService.dedupeByDayService(quotes, range);
-
-    const history = dedupedQuotes.map((quote) => this.toQuoteBaseFields(quote));
+    const dedupedQuotes = this.chartsService.dedupeByDayService(
+      quotesWithAnchor,
+      range,
+    );
 
     return {
-      asset: {
-        name: latestQuote.asset.name,
-        symbol: latestQuote.asset.symbol,
-        type: latestQuote.asset.type,
-      },
-      history,
-      latest: {
-        ...this.toQuoteBaseFields(latestQuote),
-        buyChange: toNullableNumber(latestQuote.buyChange),
-        sellChange: toNullableNumber(latestQuote.sellChange),
-      },
-      source: { code: latestQuote.source.code, name: latestQuote.source.name },
+      history: dedupedQuotes.map((quote) => this.toQuoteBaseFields(quote)),
+      range,
     };
   }
 
@@ -148,5 +193,28 @@ export class PricesService {
       sellPrice: toNullableNumber(quote.sellPrice),
       sourceUpdatedAt: quote.sourceUpdatedAt.toISOString(),
     };
+  }
+
+  private toStats(
+    history: { buyPrice: number | null; sellPrice: number | null }[],
+    latest: { buyPrice: number | null; sellPrice: number | null },
+  ) {
+    const buyOpen = history[0]?.buyPrice ?? null;
+    const sellOpen = history[0]?.sellPrice ?? null;
+
+    return {
+      buyOpen,
+      buyClose: latest.buyPrice,
+      buyChangePercent: this.toChangePercent(buyOpen, latest.buyPrice),
+      sellOpen,
+      sellClose: latest.sellPrice,
+      sellChangePercent: this.toChangePercent(sellOpen, latest.sellPrice),
+    };
+  }
+
+  private toChangePercent(fromPrice: number | null, toPrice: number | null) {
+    if (!fromPrice || toPrice === null) return null;
+
+    return Number((((toPrice - fromPrice) / fromPrice) * 100).toFixed(2));
   }
 }

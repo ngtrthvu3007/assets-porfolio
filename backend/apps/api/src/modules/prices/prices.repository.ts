@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@database';
-import { DEFAULT_SORT_ORDER } from '@shared';
+import { DEFAULT_SORT_ORDER, SORT_ORDER } from '@shared';
 import type { Prisma } from '@prisma/client';
 import type {
+  AssetIdentity,
   ListLatestQuotesParams,
   ListQuotesInRangeParams,
   ListQuotesParams,
@@ -12,10 +13,16 @@ import type {
 export class PricesRepository {
   public constructor(private readonly prismaService: PrismaService) {}
 
+  public async findAssetRepo(input: AssetIdentity) {
+    return this.prismaService.asset.findFirst({
+      where: { deletedAt: null, symbol: input.symbol, type: input.type },
+    });
+  }
+
   public async listPriceTypesRepo() {
     const assets = await this.prismaService.asset.findMany({
       distinct: ['type'],
-      orderBy: { type: 'asc' },
+      orderBy: { type: SORT_ORDER.DESC },
       select: { type: true },
       where: { deletedAt: null },
     });
@@ -62,7 +69,10 @@ export class PricesRepository {
     return this.prismaService.marketQuote.findMany({
       distinct: ['assetId'],
       include: { asset: true },
-      orderBy: [{ assetId: 'asc' }, { sourceUpdatedAt: DEFAULT_SORT_ORDER }],
+      orderBy: [
+        { assetId: SORT_ORDER.ASC },
+        { sourceUpdatedAt: DEFAULT_SORT_ORDER },
+      ],
       where: {
         asset: { deletedAt: null, type: query.type },
         deletedAt: null,
@@ -75,17 +85,52 @@ export class PricesRepository {
   public async listQuotesInRangeRepo(input: ListQuotesInRangeParams) {
     return this.prismaService.marketQuote.findMany({
       include: { asset: true, source: true },
-      orderBy: [{ sourceUpdatedAt: 'asc' }, { collectedAt: 'asc' }],
+      orderBy: [
+        { sourceUpdatedAt: SORT_ORDER.ASC },
+        { collectedAt: SORT_ORDER.ASC },
+      ],
       where: {
-        asset: {
-          deletedAt: null,
-          symbol: input.symbol,
-          type: input.type,
-        },
-        deletedAt: null,
-        source: { deletedAt: null },
+        ...this.toActiveQuoteWhere(input),
         sourceUpdatedAt: { gte: input.start, lte: input.end },
       },
     });
+  }
+
+  public async findLatestQuoteRepo(input: AssetIdentity) {
+    return this.prismaService.marketQuote.findFirst({
+      include: { asset: true, source: true },
+      orderBy: this.toNewestFirstOrder(),
+      where: this.toActiveQuoteWhere(input),
+    });
+  }
+
+  public async findLastQuoteBeforeRepo(
+    input: AssetIdentity & { before: Date },
+  ) {
+    return this.prismaService.marketQuote.findFirst({
+      include: { asset: true, source: true },
+      orderBy: this.toNewestFirstOrder(),
+      where: {
+        ...this.toActiveQuoteWhere(input),
+        sourceUpdatedAt: { lt: input.before },
+      },
+    });
+  }
+
+  // Newest quote first — shared by every "latest as of X" lookup above.
+  private toNewestFirstOrder(): Prisma.MarketQuoteOrderByWithRelationInput[] {
+    return [{ sourceUpdatedAt: SORT_ORDER.DESC }, { collectedAt: SORT_ORDER.DESC }];
+  }
+
+  private toActiveQuoteWhere(input: AssetIdentity): Prisma.MarketQuoteWhereInput {
+    return {
+      asset: {
+        deletedAt: null,
+        symbol: input.symbol,
+        type: input.type,
+      },
+      deletedAt: null,
+      source: { deletedAt: null },
+    };
   }
 }

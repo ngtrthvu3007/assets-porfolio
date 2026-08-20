@@ -22,15 +22,16 @@ export interface ListLatestQuotesParams {
   type: string;
 }
 
-export interface ListQuotesInRangeParams {
-  end: Date;
-  start: Date;
+export interface AssetIdentity {
   symbol: string;
   type: string;
 }
 
-export interface GetPriceDetailParams {
+export interface ListQuotesInRangeParams extends AssetIdentity {
+  end: Date;
+  start: Date;
+}
+
+export interface GetPriceDetailParams extends AssetIdentity {
   range?: ChartRange;
-  symbol: string;
-  type: string;
 }

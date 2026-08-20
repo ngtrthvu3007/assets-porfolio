@@ -87,13 +87,17 @@ export class PriceDetailAssetDto {
 }
 
 export class PriceDetailSourceDto {
-  @ApiProperty({ example: 'vang-today' })
-  public code!: string;
+  @ApiProperty({ example: 'vang-today', nullable: true, type: String })
+  public code!: string | null;
 
-  @ApiProperty({ example: 'vang.today' })
-  public name!: string;
+  @ApiProperty({ example: 'vang.today', nullable: true, type: String })
+  public name!: string | null;
 }
 
+// All fields nullable: a valid symbol/type with no quotes collected in the
+// requested range (e.g. a month before data collection started) still
+// returns 200 with everything null, rather than 404 — the range simply has
+// no data, which is a normal, chartable ("no line") state, not an error.
 export class PriceDetailLatestDto {
   @ApiProperty({ example: 50000, nullable: true, type: Number })
   public buyChange!: number | null;
@@ -101,8 +105,8 @@ export class PriceDetailLatestDto {
   @ApiProperty({ example: 7850000, nullable: true, type: Number })
   public buyPrice!: number | null;
 
-  @ApiProperty({ example: '2026-08-17T02:00:00.000Z' })
-  public collectedAt!: string;
+  @ApiProperty({ example: '2026-08-17T02:00:00.000Z', nullable: true, type: String })
+  public collectedAt!: string | null;
 
   @ApiProperty({ example: -20000, nullable: true, type: Number })
   public sellChange!: number | null;
@@ -110,8 +114,8 @@ export class PriceDetailLatestDto {
   @ApiProperty({ example: 7950000, nullable: true, type: Number })
   public sellPrice!: number | null;
 
-  @ApiProperty({ example: '2026-08-17T02:00:00.000Z' })
-  public sourceUpdatedAt!: string;
+  @ApiProperty({ example: '2026-08-17T02:00:00.000Z', nullable: true, type: String })
+  public sourceUpdatedAt!: string | null;
 }
 
 export class PriceHistoryPointDto {
@@ -129,22 +133,24 @@ export class PriceHistoryPointDto {
 
 // Derived from the same history[] returned alongside it — always reflects
 // whatever `range` was requested, so it never disagrees with the chart.
+// open/close are the range's first and last quotes (e.g. day 1 vs day 7 of
+// a 7d range) — a summary of the period, not the highest/lowest price seen.
 export class PriceDetailStatsDto {
-  @ApiProperty({ example: 7950000, nullable: true, type: Number })
-  public buyHigh!: number | null;
-
   @ApiProperty({ example: 7800000, nullable: true, type: Number })
-  public buyLow!: number | null;
+  public buyOpen!: number | null;
 
-  // (latest.buyPrice - history[0].buyPrice) / history[0].buyPrice * 100
+  @ApiProperty({ example: 7950000, nullable: true, type: Number })
+  public buyClose!: number | null;
+
+  // (buyClose - buyOpen) / buyOpen * 100
   @ApiProperty({ example: 1.92, nullable: true, type: Number })
   public buyChangePercent!: number | null;
 
-  @ApiProperty({ example: 8050000, nullable: true, type: Number })
-  public sellHigh!: number | null;
-
   @ApiProperty({ example: 7900000, nullable: true, type: Number })
-  public sellLow!: number | null;
+  public sellOpen!: number | null;
+
+  @ApiProperty({ example: 8050000, nullable: true, type: Number })
+  public sellClose!: number | null;
 
   @ApiProperty({ example: -0.63, nullable: true, type: Number })
   public sellChangePercent!: number | null;
