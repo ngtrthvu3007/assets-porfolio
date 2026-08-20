@@ -31,20 +31,9 @@ export class PricesRepository {
   }
 
   public async listQuotesRepo(query: ListQuotesParams) {
+    const assetWhere = this.toAssetSearchWhere(query);
     const where: Prisma.MarketQuoteWhereInput = {
-      asset: {
-        deletedAt: null,
-        type: query.type,
-        // Search matches either the asset name or its symbol.
-        ...(query.q
-          ? {
-              OR: [
-                { name: { contains: query.q } },
-                { symbol: { contains: query.q } },
-              ],
-            }
-          : undefined),
-      },
+      asset: assetWhere,
       deletedAt: null,
     };
 
@@ -66,18 +55,24 @@ export class PricesRepository {
   }
 
   public async listLatestQuotesRepo(query: ListLatestQuotesParams) {
-    return this.prismaService.marketQuote.findMany({
-      distinct: ['assetId'],
-      include: { asset: true },
-      orderBy: [
-        { assetId: SORT_ORDER.ASC },
-        { sourceUpdatedAt: DEFAULT_SORT_ORDER },
-      ],
-      where: {
-        asset: { deletedAt: null, type: query.type },
-        deletedAt: null,
-      },
-    });
+    const assetWhere = this.toAssetSearchWhere(query);
+
+    const [items, total] = await Promise.all([
+      this.prismaService.marketQuote.findMany({
+        distinct: ['assetId'],
+        include: { asset: true },
+        orderBy: [
+          { assetId: SORT_ORDER.ASC },
+          { sourceUpdatedAt: DEFAULT_SORT_ORDER },
+        ],
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+        where: { asset: assetWhere, deletedAt: null },
+      }),
+      this.prismaService.asset.count({ where: assetWhere }),
+    ]);
+
+    return { items, total };
   }
 
   // Filters by sourceUpdatedAt directly in the query so the DB never
@@ -131,6 +126,25 @@ export class PricesRepository {
       },
       deletedAt: null,
       source: { deletedAt: null },
+    };
+  }
+
+  // Search matches either the asset name or its symbol.
+  private toAssetSearchWhere(input: {
+    q?: string;
+    type: string;
+  }): Prisma.AssetWhereInput {
+    return {
+      deletedAt: null,
+      type: input.type,
+      ...(input.q
+        ? {
+            OR: [
+              { name: { contains: input.q } },
+              { symbol: { contains: input.q } },
+            ],
+          }
+        : undefined),
     };
   }
 }

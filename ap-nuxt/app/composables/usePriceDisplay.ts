@@ -34,7 +34,9 @@ export const usePriceDisplay = ({ data, isFetching, priceTypesData }: UsePriceDi
     })),
   );
 
+  const pagination = computed(() => data.value?.data.pagination);
+
   const isInitialFetching = computed(() => isFetching.value && !priceRows.value.length);
 
-  return { lastUpdatedAt, priceRows, priceTypes, isInitialFetching };
+  return { lastUpdatedAt, pagination, priceRows, priceTypes, isInitialFetching };
 };

@@ -6,4 +6,4 @@ export const DEFAULT_TOAST_DURATION_MS = 3_000;
 export const DEFAULT_STALE_TIME_MS = 60_000;
 
 export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 20;
+export const DEFAULT_PAGE_SIZE = 15;

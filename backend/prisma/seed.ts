@@ -25,8 +25,16 @@ interface AssetSeed {
 
 const sources: SourceSeed[] = [
   {
-    code: process.env.GOLD_SOURCE_1_SOURCE_CODE ?? 'market-data-provider',
-    name: process.env.GOLD_SOURCE_1_SOURCE_NAME ?? 'Market Data Provider',
+    code: process.env.GOLD_SOURCE_1_SOURCE_CODE ?? 'gold-provider-a',
+    name: process.env.GOLD_SOURCE_1_SOURCE_NAME ?? 'Gold Provider A',
+  },
+  {
+    code: process.env.GOLD_SOURCE_2_SOURCE_CODE ?? 'gold-provider-b',
+    name: process.env.GOLD_SOURCE_2_SOURCE_NAME ?? 'Gold Provider B',
+  },
+  {
+    code: process.env.GOLD_SOURCE_3_SOURCE_CODE ?? 'gold-provider-c',
+    name: process.env.GOLD_SOURCE_3_SOURCE_NAME ?? 'Gold Provider C',
   },
 ];
 
@@ -43,6 +51,13 @@ const assets: AssetSeed[] = [
   { name: 'PNJ 24K', symbol: 'PQHN24NTT', type: ASSET_TYPES.gold },
   { name: 'VN Gold SJC', symbol: 'VNGSJC', type: ASSET_TYPES.gold },
   { name: 'Viettin SJC', symbol: 'VIETTINMSJC', type: ASSET_TYPES.gold },
+  { name: 'Mi Hồng 999', symbol: 'MH999', type: ASSET_TYPES.gold },
+  { name: 'Mi Hồng 985', symbol: 'MH985', type: ASSET_TYPES.gold },
+  { name: 'Mi Hồng 980', symbol: 'MH980', type: ASSET_TYPES.gold },
+  { name: 'Mi Hồng 950', symbol: 'MH950', type: ASSET_TYPES.gold },
+  { name: 'Kim Nga 99', symbol: 'KN99', type: ASSET_TYPES.gold },
+  { name: 'Kim Nga 999', symbol: 'KN999', type: ASSET_TYPES.gold },
+  { name: 'Kim Nga 9999', symbol: 'KN9999', type: ASSET_TYPES.gold },
 ];
 
 const seedSources = () => {

@@ -33,7 +33,8 @@ export const PRICE_DETAIL_RANGE_OPTIONS: { value: PriceDetailRange; label: strin
 export const PRICES_QUERY_KEYS = {
   detail: (type: string, symbol: string, range?: string) =>
     ["prices", "detail", type, symbol, range] as const,
-  latest: (type: string) => ["prices", "latest", type] as const,
+  latest: (type: string, q?: string, page?: number, pageSize?: number) =>
+    ["prices", "latest", type, q, page, pageSize] as const,
   list: (type: string, q?: string, page?: number, pageSize?: number, sort?: string, order?: string) =>
     ["prices", "list", type, q, page, pageSize, sort, order] as const,
   types: ["prices", "types"] as const,

@@ -3,12 +3,12 @@ import axios from 'axios';
 import { ASSET_TYPES } from '@shared/types/assets';
 import type { MarketDataCollectionResult } from '@shared/types/market-data';
 import type { MarketDataCollector } from '../types/market-data-collector.type';
-import type { MarketDataApiResponse } from '../types/market-data-api.type';
-import type { MarketDataApiSourceConfig } from './market-data-api-source.config';
+import type { GoldProviderAApiResponse } from '../types/gold-provider-a-api.type';
+import type { GoldProviderASourceConfig } from './gold-provider-a-source.config';
 
 @Injectable()
-export class MarketDataApiCollector implements MarketDataCollector {
-  public constructor(private readonly config: MarketDataApiSourceConfig) {}
+export class GoldProviderACollector implements MarketDataCollector {
+  public constructor(private readonly config: GoldProviderASourceConfig) {}
 
   public get cronExpression(): string {
     return this.config.cronExpression;
@@ -23,7 +23,9 @@ export class MarketDataApiCollector implements MarketDataCollector {
 
     url.searchParams.set(this.config.actionKey, this.config.actionValue);
 
-    const response = await axios.get<MarketDataApiResponse>(url.toString());
+    const response = await axios.get<GoldProviderAApiResponse>(
+      url.toString(),
+    );
 
     if (!response.data.success) {
       throw new Error(`${this.source} returned unsuccessful response`);

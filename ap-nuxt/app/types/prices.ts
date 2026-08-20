@@ -1,12 +1,15 @@
-export interface LatestPricesQuery {
-  type: string;
-}
-
 export interface PaginationMeta {
   page: number;
   pageSize: number;
   total: number;
   totalPages: number;
+}
+
+export interface LatestPricesQuery {
+  type: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export type PriceListSort = "buyPrice" | "sellPrice" | "sourceUpdatedAt";
@@ -48,6 +51,7 @@ export interface PriceItem extends PriceAsset, PriceHistoryPoint, PriceQuoteChan
 export interface LatestPricesResponse {
   currentTime: string;
   items: PriceItem[];
+  pagination: PaginationMeta;
   type: string;
 }
 
