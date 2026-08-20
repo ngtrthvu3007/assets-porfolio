@@ -70,11 +70,12 @@ useSeoMeta({
           </Tabs>
 
           <div class="relative">
-            <SearchIcon class="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <SearchIcon
+              class="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input v-model="search" placeholder="Tìm theo mã hoặc tên..." class="w-56 pl-8" />
           </div>
 
-          <Button size="sm" :disabled="isFetching" @click="refetch()">
+          <Button size="sm" variant="default" :disabled="isFetching" @click="refetch()">
             <LoaderCircleIcon v-if="isFetching" class="h-4 w-4 animate-spin" />
             <RefreshCwIcon v-else class="h-4 w-4" />
             Làm mới
